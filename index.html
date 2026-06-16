@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scent Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; }
+:root {
+  --bg:#F5F5F7; --bg-card:#FFFFFF; --bg-modal:#FFFFFF; --bg-input:#F5F5F7;
+  --sep:rgba(0,0,0,0.08); --sep-hard:rgba(0,0,0,0.12);
+  --text-1:#1D1D1F; --text-2:#6E6E73; --text-3:#AEAEB2;
+  --accent:#8B6914; --accent-bg:rgba(139,105,20,0.08);
+  --blue:#0071E3; --green:#34C759; --red:#FF3B30; --orange:#FF9500;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);
+  --shadow-lg:0 20px 60px rgba(0,0,0,0.12);
+  --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:20px;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif;
+  --font-display:'Playfair Display',Georgia,serif;
+  --spring:#2D6A0A; --spring-bg:rgba(45,106,10,0.08);
+  --summer:#0058C6; --summer-bg:rgba(0,88,198,0.08);
+  --fall:#A0430A;   --fall-bg:rgba(160,67,10,0.08);
+  --winter:#4038A8; --winter-bg:rgba(64,56,168,0.08);
+  --work:#0A7A5E;   --work-bg:rgba(10,122,94,0.08);
+}
+[data-theme="dark"] {
+  --bg:#000000; --bg-card:#1C1C1E; --bg-modal:#2C2C2E; --bg-input:#3A3A3C;
+  --sep:rgba(255,255,255,0.08); --sep-hard:rgba(255,255,255,0.12);
+  --text-1:#F5F5F7; --text-2:#AEAEB2; --text-3:#6E6E73;
+  --accent:#D4A017; --accent-bg:rgba(212,160,23,0.12);
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.4); --shadow-md:0 4px 16px rgba(0,0,0,0.5); --shadow-lg:0 20px 60px rgba(0,0,0,0.7);
+  --spring-bg:rgba(45,106,10,0.15); --summer-bg:rgba(0,88,198,0.15);
+  --fall-bg:rgba(160,67,10,0.15); --winter-bg:rgba(64,56,168,0.15); --work-bg:rgba(10,122,94,0.15);
+}
+body { font-family:var(--font); background:var(--bg); color:var(--text-1); min-height:100vh; transition:background 0.3s,color 0.3s; }
+
+/* NAVBAR */
+.navbar { position:sticky; top:0; z-index:100; background:rgba(255,255,255,0.72); backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px); border-bottom:0.5px solid var(--sep-hard); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:52px; transition:background 0.3s; }
+[data-theme="dark"] .navbar { background:rgba(0,0,0,0.72); }
+.navbar-brand { font-size:17px; font-weight:600; letter-spacing:-0.02em; color:var(--text-1); }
+.navbar-brand span { color:var(--accent); }
+.navbar-actions { display:flex; align-items:center; gap:8px; }
+.icon-btn { width:34px; height:34px; border-radius:50%; border:none; background:transparent; cursor:pointer; color:var(--text-2); display:flex; align-items:center; justify-content:center; transition:background 0.15s,color 0.15s; }
+.icon-btn:hover { background:var(--sep); color:var(--text-1); }
+.sync-dot { width:7px; height:7px; border-radius:50%; background:var(--green); margin-right:4px; flex-shrink:0; transition:background 0.3s; }
+.sync-dot.err { background:var(--red); }
+.sync-dot.loading { background:var(--text-3); animation:blink 1s infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.sync-label { font-size:12px; color:var(--text-2); }
+
+/* PAGE */
+.page { max-width:1200px; margin:0 auto; padding:2rem 2rem 4rem; }
+.section-eyebrow { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); margin-bottom:12px; }
+
+/* RANDOMIZER */
+.randomizer-card { background:var(--bg-card); border-radius:var(--r-xl); box-shadow:var(--shadow-md); padding:1.75rem 2rem; margin-bottom:2rem; }
+.randomizer-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:12px; }
+.randomizer-title { font-family:var(--font-display); font-size:28px; font-weight:400; letter-spacing:-0.01em; color:var(--text-1); line-height:1.2; }
+.randomizer-title em { font-style:italic; color:var(--accent); }
+.randomizer-meta { font-size:13px; color:var(--text-2); margin-top:4px; }
+.roll-btn { display:flex; align-items:center; gap:7px; padding:9px 18px; border-radius:980px; background:var(--text-1); color:var(--bg); border:none; font-family:var(--font); font-size:14px; font-weight:500; cursor:pointer; transition:opacity 0.15s; white-space:nowrap; flex-shrink:0; }
+.roll-btn:hover { opacity:0.82; }
+.week-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+.day-col { background:var(--bg); border-radius:var(--r-md); overflow:hidden; border:0.5px solid var(--sep-hard); transition:transform 0.15s; }
+.day-col:hover { transform:translateY(-2px); }
+.day-col.today { border-color:var(--accent); border-width:1px; }
+.day-header { padding:10px 12px 8px; border-bottom:0.5px solid var(--sep); display:flex; align-items:baseline; gap:6px; }
+.day-name { font-size:12px; font-weight:600; color:var(--text-1); }
+.day-date { font-size:11px; color:var(--text-3); }
+.today-pip { width:6px; height:6px; border-radius:50%; background:var(--accent); margin-left:auto; flex-shrink:0; }
+.day-slot { padding:10px 12px; cursor:pointer; }
+.day-slot:hover { background:var(--sep); }
+.day-slot+.day-slot { border-top:0.5px solid var(--sep); }
+.slot-time { font-size:10px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-3); margin-bottom:5px; display:flex; align-items:center; gap:4px; }
+.slot-brand { font-size:10px; color:var(--text-3); margin-bottom:2px; }
+.slot-name { font-size:13px; font-weight:500; color:var(--text-1); line-height:1.3; }
+.slot-style { font-size:11px; color:var(--text-2); margin-top:2px; }
+.slot-empty { font-size:12px; color:var(--text-3); font-style:italic; }
+
+/* STATS */
+.stats-strip { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:2rem; }
+@media(max-width:900px){.stats-strip{grid-template-columns:repeat(3,1fr);}}
+.stat-tile { background:var(--bg-card); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); padding:16px 18px; }
+.stat-tile .st-label { font-size:11px; font-weight:500; color:var(--text-2); margin-bottom:6px; }
+.stat-tile .st-val { font-size:28px; font-weight:300; letter-spacing:-0.03em; color:var(--text-1); line-height:1; }
+.stat-tile.spring .st-val{color:var(--spring)} .stat-tile.summer .st-val{color:var(--summer)}
+.stat-tile.fall   .st-val{color:var(--fall)}   .stat-tile.winter .st-val{color:var(--winter)}
+.stat-tile.work   .st-val{color:var(--work)}
+
+/* FILTER BAR */
+.filter-bar { background:var(--bg-card); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); padding:12px 16px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:1.5rem; }
+.filter-section { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.filter-divider { width:0.5px; height:20px; background:var(--sep-hard); }
+.seg-group { display:flex; background:var(--bg-input); border-radius:var(--r-sm); padding:2px; gap:2px; }
+.seg-btn { padding:5px 12px; border-radius:6px; border:none; font-family:var(--font); font-size:12px; font-weight:500; cursor:pointer; background:transparent; color:var(--text-2); transition:all 0.15s; white-space:nowrap; }
+.seg-btn.active { background:var(--bg-card); color:var(--text-1); box-shadow:var(--shadow-sm); }
+.work-toggle-wrap { margin-left:auto; display:flex; align-items:center; gap:8px; cursor:pointer; }
+.work-toggle-label { font-size:13px; color:var(--text-2); }
+.toggle-track { width:40px; height:24px; border-radius:12px; background:var(--sep-hard); position:relative; transition:background 0.2s; flex-shrink:0; }
+.toggle-track.on { background:var(--green); }
+.toggle-thumb { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:white; box-shadow:0 1px 3px rgba(0,0,0,0.2); transition:left 0.2s; }
+.toggle-track.on .toggle-thumb { left:19px; }
+
+/* GRID */
+.showing-label { font-size:13px; color:var(--text-2); margin-bottom:14px; }
+.frag-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+.frag-card { background:var(--bg-card); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); padding:1.1rem 1.25rem; cursor:pointer; border:0.5px solid transparent; transition:box-shadow 0.2s,transform 0.15s,border-color 0.2s; position:relative; overflow:hidden; }
+.frag-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); border-color:var(--sep-hard); }
+.frag-card.work-ok::after { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--green); border-radius:3px 0 0 3px; }
+.frag-card.enriched::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent); opacity:0.5; }
+.card-brand { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); margin-bottom:4px; }
+.card-name { font-size:15px; font-weight:500; color:var(--text-1); line-height:1.3; margin-bottom:6px; letter-spacing:-0.01em; }
+.card-style { font-size:12px; color:var(--text-2); margin-bottom:10px; }
+.card-badges { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
+.badge { font-size:11px; font-weight:500; padding:2px 8px; border-radius:980px; display:inline-block; }
+.b-spring{background:var(--spring-bg);color:var(--spring)} .b-summer{background:var(--summer-bg);color:var(--summer)}
+.b-fall{background:var(--fall-bg);color:var(--fall)} .b-winter{background:var(--winter-bg);color:var(--winter)}
+.b-all{background:var(--sep);color:var(--text-2)} .b-work{background:var(--work-bg);color:var(--work);font-size:10px}
+.card-use { font-size:11px; color:var(--text-3); }
+.skeleton { background:linear-gradient(90deg,var(--bg-card) 0%,var(--sep) 50%,var(--bg-card) 100%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:var(--r-lg); height:150px; }
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.no-results { grid-column:1/-1; text-align:center; padding:4rem 2rem; color:var(--text-3); font-size:15px; }
+
+/* ENRICH BANNER */
+.enrich-banner { background:var(--bg-card); border-radius:var(--r-lg); box-shadow:var(--shadow-sm); padding:1rem 1.5rem; margin-bottom:1.5rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; border:0.5px solid var(--sep-hard); }
+.enrich-banner.hidden { display:none; }
+.enrich-icon { width:36px; height:36px; border-radius:50%; background:var(--accent-bg); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.enrich-text { flex:1; min-width:0; }
+.enrich-title { font-size:14px; font-weight:500; color:var(--text-1); margin-bottom:2px; }
+.enrich-sub { font-size:12px; color:var(--text-2); }
+.enrich-btn { padding:8px 18px; background:var(--accent); color:white; border:none; border-radius:980px; font-family:var(--font); font-size:13px; font-weight:500; cursor:pointer; transition:opacity 0.15s; white-space:nowrap; flex-shrink:0; }
+.enrich-btn:hover { opacity:0.85; }
+.enrich-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+/* PROGRESS MODAL */
+.progress-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:400; backdrop-filter:blur(6px); align-items:center; justify-content:center; }
+.progress-modal.open { display:flex; }
+.progress-card { background:var(--bg-modal); border-radius:var(--r-xl); box-shadow:var(--shadow-lg); padding:2rem; width:min(480px,92vw); }
+.progress-title { font-size:20px; font-weight:500; letter-spacing:-0.02em; margin-bottom:6px; }
+.progress-sub { font-size:13px; color:var(--text-2); margin-bottom:1.5rem; }
+.progress-bar-wrap { background:var(--sep); border-radius:980px; height:6px; margin-bottom:1rem; overflow:hidden; }
+.progress-bar { height:100%; background:var(--accent); border-radius:980px; transition:width 0.4s; width:0%; }
+.progress-status { font-size:13px; color:var(--text-2); margin-bottom:1.5rem; min-height:20px; }
+.progress-log { background:var(--bg); border-radius:var(--r-md); padding:12px 14px; max-height:160px; overflow-y:auto; font-size:12px; color:var(--text-2); line-height:1.8; font-family:'SF Mono','Fira Mono',monospace; }
+.progress-log .ok  { color:var(--green); }
+.progress-log .err { color:var(--red); }
+.progress-log .inf { color:var(--text-3); }
+.progress-done-btn { margin-top:1rem; padding:9px 22px; background:var(--text-1); color:var(--bg); border:none; border-radius:980px; font-family:var(--font); font-size:14px; font-weight:500; cursor:pointer; display:none; }
+.progress-done-btn.visible { display:inline-block; }
+
+/* DETAIL PANEL */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:300; backdrop-filter:blur(4px); }
+.overlay.open { display:block; }
+.detail-panel { position:fixed; top:0; right:0; bottom:0; width:min(400px,100vw); background:var(--bg-card); z-index:301; transform:translateX(100%); transition:transform 0.28s cubic-bezier(0.32,0,0.15,1); overflow-y:auto; display:flex; flex-direction:column; box-shadow:var(--shadow-lg); }
+.detail-panel.open { transform:translateX(0); }
+.dp-header { padding:1.5rem 1.5rem 1.25rem; border-bottom:0.5px solid var(--sep); position:sticky; top:0; z-index:1; background:var(--bg-card); display:flex; align-items:flex-start; gap:12px; }
+.dp-titles { flex:1; }
+.dp-brand { font-size:11px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-3); margin-bottom:4px; }
+.dp-name { font-size:22px; font-weight:500; letter-spacing:-0.02em; color:var(--text-1); line-height:1.2; }
+.dp-close { width:28px; height:28px; border-radius:50%; border:none; background:var(--bg-input); color:var(--text-2); font-size:14px; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.dp-body { padding:1.5rem; flex:1; }
+.dp-sec { margin-bottom:1.5rem; }
+.dp-sec-label { font-size:11px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-3); margin-bottom:8px; }
+.dp-sec-val { font-size:14px; color:var(--text-2); line-height:1.6; }
+.note-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.note-col { background:var(--bg); border-radius:var(--r-sm); padding:10px 12px; }
+.note-col-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-3); margin-bottom:5px; }
+.note-col-val { font-size:12px; color:var(--text-2); line-height:1.6; }
+.similar-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.similar-chip { padding:5px 12px; background:var(--bg); border:0.5px solid var(--sep-hard); border-radius:980px; font-size:12px; color:var(--text-2); }
+.ai-tag { display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--text-3); margin-top:6px; }
+.work-flag { background:var(--work-bg); color:var(--work); border-radius:var(--r-sm); padding:10px 14px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:7px; margin-top:4px; }
+
+/* ADD FORM */
+.add-section { margin-top:2.5rem; }
+.add-card { background:var(--bg-card); border-radius:var(--r-xl); box-shadow:var(--shadow-sm); overflow:hidden; }
+.add-card-header { padding:1.5rem 2rem 1rem; border-bottom:0.5px solid var(--sep); }
+.add-card-title { font-size:20px; font-weight:500; letter-spacing:-0.02em; margin-bottom:4px; }
+.add-card-sub { font-size:13px; color:var(--text-2); }
+.add-card-body { padding:1.5rem 2rem; display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+.add-card-body .full { grid-column:1/-1; }
+.form-field label { display:block; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-3); margin-bottom:6px; }
+.form-field input,.form-field select { width:100%; padding:9px 12px; background:var(--bg-input); border:0.5px solid var(--sep-hard); border-radius:var(--r-sm); color:var(--text-1); font-family:var(--font); font-size:14px; transition:border-color 0.15s,box-shadow 0.15s; }
+.form-field input:focus,.form-field select:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
+.ai-preview-box { grid-column:1/-1; display:none; background:var(--bg); border-radius:var(--r-md); border:0.5px solid var(--sep-hard); overflow:hidden; }
+.ai-preview-box.visible { display:block; }
+.ai-preview-header { padding:10px 14px; border-bottom:0.5px solid var(--sep); display:flex; align-items:center; gap:8px; }
+.ai-preview-title { font-size:12px; font-weight:600; color:var(--text-2); }
+.ai-spinner { width:14px; height:14px; border:2px solid var(--sep-hard); border-top-color:var(--text-2); border-radius:50%; animation:spin 0.7s linear infinite; display:none; }
+@keyframes spin{to{transform:rotate(360deg)}}
+.ai-preview-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:1px; background:var(--sep); }
+.ai-preview-cell { background:var(--bg-card); padding:10px 14px; }
+.ai-cell-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-3); margin-bottom:3px; }
+.ai-cell-val { font-size:12px; color:var(--text-1); line-height:1.5; }
+.ai-cell-val.empty { color:var(--text-3); font-style:italic; }
+.btn-row { grid-column:1/-1; display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding-top:4px; }
+.btn-primary { padding:10px 22px; background:var(--blue); color:white; border:none; border-radius:980px; font-family:var(--font); font-size:14px; font-weight:500; cursor:pointer; transition:opacity 0.15s; }
+.btn-primary:hover { opacity:0.85; }
+.btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
+.btn-secondary { padding:10px 18px; background:var(--bg-input); color:var(--text-1); border:none; border-radius:980px; font-family:var(--font); font-size:14px; font-weight:500; cursor:pointer; transition:opacity 0.15s; display:flex; align-items:center; gap:6px; }
+.btn-secondary:hover { opacity:0.75; }
+.btn-secondary:disabled { opacity:0.4; cursor:not-allowed; }
+
+/* SETTINGS MODAL */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:500; backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--bg-modal); border-radius:var(--r-xl); box-shadow:var(--shadow-lg); padding:2rem; width:min(460px,92vw); max-height:90vh; overflow-y:auto; animation:modal-in 0.22s cubic-bezier(0.32,0,0.15,1); }
+@keyframes modal-in{from{opacity:0;transform:scale(0.96) translateY(8px)}to{opacity:1;transform:none}}
+.modal-title { font-size:20px; font-weight:600; margin-bottom:6px; letter-spacing:-0.02em; }
+.modal-sub { font-size:14px; color:var(--text-2); margin-bottom:1.5rem; line-height:1.6; }
+.modal-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-3); margin-bottom:6px; }
+.modal-input { width:100%; padding:10px 14px; background:var(--bg-input); border:0.5px solid var(--sep-hard); border-radius:var(--r-sm); color:var(--text-1); font-family:var(--font); font-size:13px; margin-bottom:1rem; }
+.modal-input:focus { outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(0,113,227,0.15); }
+.modal-steps { background:var(--bg); border-radius:var(--r-md); padding:1rem 1.25rem; margin-bottom:1.5rem; }
+.modal-steps ol { padding-left:1.25rem; }
+.modal-steps li { font-size:13px; color:var(--text-2); line-height:1.8; }
+.modal-steps code { font-family:'SF Mono','Fira Mono',monospace; font-size:12px; background:var(--sep); padding:1px 5px; border-radius:4px; color:var(--text-1); }
+.modal-footer { display:flex; justify-content:flex-end; gap:10px; margin-top:1rem; }
+.modal-btn-cancel { padding:9px 18px; background:var(--bg-input); color:var(--text-1); border:none; border-radius:980px; font-family:var(--font); font-size:14px; cursor:pointer; }
+.modal-btn-save { padding:9px 18px; background:var(--blue); color:white; border:none; border-radius:980px; font-family:var(--font); font-size:14px; font-weight:500; cursor:pointer; }
+.modal-btn-save:hover { opacity:0.85; }
+
+/* TOAST */
+.toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(16px); background:var(--text-1); color:var(--bg); padding:10px 20px; border-radius:980px; font-size:13px; font-weight:500; opacity:0; pointer-events:none; z-index:600; transition:all 0.22s; white-space:nowrap; box-shadow:var(--shadow-md); }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+@media(max-width:680px){
+  .page{padding:1.25rem 1rem 3rem} .navbar{padding:0 1rem}
+  .week-grid{grid-template-columns:repeat(5,1fr);gap:6px}
+  .day-slot{padding:8px} .slot-brand,.slot-style{display:none}
+  .randomizer-card{padding:1.25rem} .add-card-body{padding:1.25rem}
+  .note-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-brand">scent<span>·</span>journal</div>
+  <div class="navbar-actions">
+    <div style="display:flex;align-items:center;gap:6px;padding:0 8px;">
+      <div class="sync-dot loading" id="sync-dot"></div>
+      <span class="sync-label" id="sync-label">loading</span>
+    </div>
+    <button class="icon-btn" id="theme-btn" title="Toggle theme">
+      <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <button class="icon-btn" id="settings-btn" title="Settings">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-title">Settings</div>
+    <div class="modal-sub">Connect your Google Sheet so the dashboard reads and writes your collection live.</div>
+    <div class="modal-label">Apps Script Web App URL</div>
+    <input class="modal-input" id="script-url-input" placeholder="https://script.google.com/macros/s/…/exec" />
+    <div class="modal-label" style="margin-top:0.5rem;">Setup instructions</div>
+    <div class="modal-steps">
+      <ol>
+        <li>Open your Google Sheet → <code>Extensions</code> → <code>Apps Script</code></li>
+        <li>Paste the <code>FragranceDashboard_AppsScript.js</code> contents and save</li>
+        <li>Click <code>Deploy</code> → <code>New deployment</code> → gear → <code>Web app</code></li>
+        <li>Set <em>Execute as:</em> <code>Me</code> · <em>Who has access:</em> <code>Anyone</code></li>
+        <li>Click <code>Deploy</code>, authorize, copy the Web app URL above</li>
+      </ol>
+    </div>
+    <div class="modal-label" style="margin-top:0.5rem;">Collection tools</div>
+    <div style="background:var(--bg);border-radius:var(--r-md);padding:12px 14px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:2px;">Enrich collection with AI</div>
+        <div style="font-size:12px;color:var(--text-2);">Look up full notes, similar frags & more for all bottles</div>
+      </div>
+      <button class="enrich-btn" id="enrich-btn-settings" style="flex-shrink:0;">Run enrichment</button>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn-cancel" id="settings-cancel">Cancel</button>
+      <button class="modal-btn-save" id="settings-save">Save & connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- Progress Modal -->
+<div class="progress-modal" id="progress-modal">
+  <div class="progress-card">
+    <div class="progress-title">Enriching your collection</div>
+    <div class="progress-sub" id="prog-sub">Looking up notes, similar frags, and more for each bottle…</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="prog-bar"></div></div>
+    <div class="progress-status" id="prog-status"></div>
+    <div class="progress-log" id="prog-log"></div>
+    <button class="progress-done-btn" id="prog-done-btn" onclick="closeProgressModal()">Done</button>
+  </div>
+</div>
+
+<main class="page">
+  <div class="section-eyebrow">This week's rotation</div>
+  <div class="randomizer-card">
+    <div class="randomizer-header">
+      <div>
+        <div class="randomizer-title">Your <em>week</em> at a glance</div>
+        <div class="randomizer-meta" id="rand-meta"></div>
+      </div>
+      <button class="roll-btn" id="roll-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Reshuffle
+      </button>
+    </div>
+    <div class="week-grid" id="week-grid"></div>
+  </div>
+
+  <div class="section-eyebrow">Collection overview</div>
+  <div class="stats-strip" id="stats-strip"></div>
+
+  <!-- Enrich banner — shown when frags are missing notes -->
+  <div class="enrich-banner hidden" id="enrich-banner">
+    <div class="enrich-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </div>
+    <div class="enrich-text">
+      <div class="enrich-title">Some frags are missing notes</div>
+      <div class="enrich-sub" id="enrich-sub">AI can look up top, mid, base notes, similar frags, and more for your whole collection.</div>
+    </div>
+    <button class="enrich-btn" id="enrich-btn">Enrich collection</button>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-section">
+      <div class="seg-group" id="season-seg">
+        <button class="seg-btn active" data-season="all">All</button>
+        <button class="seg-btn" data-season="spring">🌸 Spring</button>
+        <button class="seg-btn" data-season="summer">☀️ Summer</button>
+        <button class="seg-btn" data-season="fall">🍂 Fall</button>
+        <button class="seg-btn" data-season="winter">❄️ Winter</button>
+      </div>
+    </div>
+    <div class="filter-divider"></div>
+    <div class="filter-section">
+      <div class="seg-group" id="style-seg">
+        <button class="seg-btn active" data-style="all">All styles</button>
+        <button class="seg-btn" data-style="Fresh">Fresh</button>
+        <button class="seg-btn" data-style="Sweet">Sweet</button>
+        <button class="seg-btn" data-style="Woody">Woody</button>
+        <button class="seg-btn" data-style="Tobacco">Tobacco</button>
+        <button class="seg-btn" data-style="Musk">Musk</button>
+        <button class="seg-btn" data-style="Oriental">Oriental</button>
+      </div>
+    </div>
+    <div class="work-toggle-wrap" id="work-toggle-wrap">
+      <div class="toggle-track" id="work-track"><div class="toggle-thumb"></div></div>
+      <span class="work-toggle-label">Work-safe only</span>
+    </div>
+  </div>
+
+  <p class="showing-label" id="showing-label"></p>
+  <div class="frag-grid" id="frag-grid">
+    <div class="skeleton"></div><div class="skeleton"></div>
+    <div class="skeleton"></div><div class="skeleton"></div>
+    <div class="skeleton"></div><div class="skeleton"></div>
+  </div>
+
+  <div class="add-section">
+    <div class="section-eyebrow" style="margin-top:2.5rem;">Add a fragrance</div>
+    <div class="add-card">
+      <div class="add-card-header">
+        <div class="add-card-title">New bottle</div>
+        <div class="add-card-sub">Enter brand and name — AI will automatically look up all the details.</div>
+      </div>
+      <div class="add-card-body">
+        <div class="form-field"><label>Brand *</label><input id="in-brand" placeholder="e.g. YSL"></div>
+        <div class="form-field"><label>Name *</label><input id="in-name" placeholder="e.g. Y EDP"></div>
+        <div class="form-field">
+          <label>Season(s)</label>
+          <select id="in-season">
+            <option value="">AI will suggest…</option>
+            <option>Spring</option><option>Summer</option><option>Fall</option><option>Winter</option>
+            <option>Spring/Summer</option><option>Spring/Fall</option>
+            <option>Fall/Winter</option><option>Spring/Summer/Fall</option><option>All Year</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Best Use</label><input id="in-use" placeholder="AI will suggest…"></div>
+        <div class="ai-preview-box" id="ai-preview">
+          <div class="ai-preview-header">
+            <div class="ai-spinner" id="ai-spinner"></div>
+            <span class="ai-preview-title" id="ai-preview-title">AI lookup result</span>
+          </div>
+          <div class="ai-preview-grid" id="ai-preview-grid"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-secondary" id="lookup-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Look up with AI
+          </button>
+          <button class="btn-primary" id="add-btn">Add to collection</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="overlay" id="overlay"></div>
+<aside class="detail-panel" id="detail-panel">
+  <div class="dp-header">
+    <div class="dp-titles">
+      <div class="dp-brand" id="dp-brand"></div>
+      <div class="dp-name" id="dp-name"></div>
+    </div>
+    <button class="dp-close" id="dp-close">✕</button>
+  </div>
+  <div class="dp-body">
+    <div class="dp-sec"><div class="dp-sec-label">Style</div><div class="dp-sec-val" id="dp-style"></div></div>
+    <div class="dp-sec"><div class="dp-sec-label">Best seasons</div><div class="card-badges" id="dp-seasons"></div></div>
+    <div class="dp-sec"><div class="dp-sec-label">Occasions</div><div class="dp-sec-val" id="dp-use"></div></div>
+    <div class="dp-sec" id="dp-conc-sec" style="display:none"><div class="dp-sec-label">Concentration</div><div class="dp-sec-val" id="dp-conc"></div></div>
+    <div class="dp-sec">
+      <div class="dp-sec-label">Scent notes</div>
+      <div class="note-row" id="dp-notes"></div>
+      <div class="ai-tag" id="dp-ai-tag" style="display:none">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        AI-enriched
+      </div>
+    </div>
+    <div class="dp-sec" id="dp-similar-sec" style="display:none"><div class="dp-sec-label">Similar fragrances</div><div class="similar-chips" id="dp-similar"></div></div>
+    <div class="dp-sec" id="dp-inspired-sec" style="display:none"><div class="dp-sec-label">Inspired by</div><div class="dp-sec-val" id="dp-inspired"></div></div>
+    <div class="dp-sec" id="dp-longevity-sec" style="display:none"><div class="dp-sec-label">Longevity & sillage</div><div class="dp-sec-val" id="dp-longevity"></div></div>
+    <div class="work-flag" id="dp-work" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Work-appropriate
+    </div>
+  </div>
+</aside>
+<div class="toast" id="toast"></div>
+
+<script>
+const SCRIPT_KEY = 'scentJournalScriptURL';
+const THEME_KEY  = 'scentJournalTheme';
+const WORK_KW    = ['office','work','daily','layering'];
+const API_URL    = 'https://api.anthropic.com/v1/messages';
+const DAYS       = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+let frags = [], activeSeason = 'all', activeStyle = 'all', workOnly = false;
+let scriptURL = localStorage.getItem(SCRIPT_KEY) || '';
+let aiData = {}, weekSchedule = [];
+
+const $ = id => document.getElementById(id);
+const isWork = f => WORK_KW.some(k => (f.use||'').toLowerCase().includes(k));
+const isEnriched = f => !!(f.topNotes || f.midNotes || f.baseNotes);
+const needsEnrichment = f => !(f.topNotes || f.midNotes || f.baseNotes);
+// After load, frags array reflects sheet state — enrichment check is always accurate
+
+function seasonList(f) {
+  const s = (f.seasons||'').toLowerCase();
+  if (!s || s==='all year') return ['all'];
+  return s.split('/').map(x => x.trim());
+}
+function seasonMatch(f,s){ return s==='all' || seasonList(f).includes(s); }
+function styleMatch(f,s) { return s==='all' || [f.category||'',f.style||''].some(x=>x.toLowerCase().includes(s.toLowerCase())); }
+function getCurrentSeason() {
+  const m = new Date().getMonth();
+  if(m>=2&&m<=4) return 'spring'; if(m>=5&&m<=7) return 'summer';
+  if(m>=8&&m<=10) return 'fall'; return 'winter';
+}
+function badgeHTML(f) {
+  const sl = seasonList(f);
+  if(sl[0]==='all') return '<span class="badge b-all">All year</span>';
+  const L={spring:'Spring',summer:'Summer',fall:'Fall',winter:'Winter'};
+  return sl.map(s=>`<span class="badge b-${s}">${L[s]||s}</span>`).join('');
+}
+function toast(msg,d=2800){ const el=$('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),d); }
+function setSyncStatus(state,msg){ $('sync-dot').className='sync-dot '+(state==='ok'?'':state); $('sync-label').textContent=msg; }
+
+// ── Theme ────────────────────────────────────────────────────
+function initTheme() {
+  const saved=localStorage.getItem(THEME_KEY);
+  const dark=window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved||(dark?'dark':'light'));
+}
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme',theme);
+  localStorage.setItem(THEME_KEY,theme);
+  const icon=$('theme-icon');
+  if(theme==='dark') icon.innerHTML='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+  else icon.innerHTML='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+}
+$('theme-btn').addEventListener('click',()=>{ const c=document.documentElement.getAttribute('data-theme')||'light'; applyTheme(c==='dark'?'light':'dark'); });
+
+// ── Settings ─────────────────────────────────────────────────
+$('settings-btn').addEventListener('click',()=>{ $('script-url-input').value=scriptURL; $('settings-modal').classList.add('open'); });
+$('settings-cancel').addEventListener('click',()=>$('settings-modal').classList.remove('open'));
+$('settings-modal').addEventListener('click',e=>{ if(e.target===$('settings-modal'))$('settings-modal').classList.remove('open'); });
+$('settings-save').addEventListener('click',()=>{
+  const val=$('script-url-input').value.trim();
+  if(!val.startsWith('https://')){ toast('That doesn\'t look like a valid URL'); return; }
+  scriptURL=val; localStorage.setItem(SCRIPT_KEY,scriptURL);
+  $('settings-modal').classList.remove('open'); loadFromSheet();
+});
+
+// ── JSONP ────────────────────────────────────────────────────
+function jsonp(url) {
+  return new Promise((resolve,reject)=>{
+    const cb='sjcb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    const timer=setTimeout(()=>{ cleanup(); reject(new Error('Timeout')); },15000);
+    function cleanup(){ clearTimeout(timer); delete window[cb]; if(script.parentNode) script.parentNode.removeChild(script); }
+    window[cb]=data=>{ cleanup(); resolve(data); };
+    script.src=url+(url.includes('?')?'&':'?')+'callback='+cb;
+    script.onerror=()=>{ cleanup(); reject(new Error('Script load failed')); };
+    document.head.appendChild(script);
+  });
+}
+
+// ── Sheet API ────────────────────────────────────────────────
+async function loadFromSheet() {
+  if(!scriptURL){ setSyncStatus('err','not connected'); renderEmpty(); return; }
+  setSyncStatus('loading','syncing…');
+  try {
+    const data=await jsonp(scriptURL+'?action=getAll');
+    if(data.error) throw new Error(data.error);
+    frags=data.rows||[];
+    setSyncStatus('ok',frags.length+' frags');
+    render(); buildWeekSchedule(); checkEnrichBanner();
+  } catch(e){ setSyncStatus('err','connection failed'); renderEmpty(); }
+}
+
+function renderEmpty() {
+  $('frag-grid').innerHTML='<div class="no-results">Open <strong>Settings ⚙</strong> in the top right to connect your Google Sheet.</div>';
+  $('stats-strip').innerHTML='';
+  $('week-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--text-3);font-size:13px;">Connect your sheet to generate a weekly rotation.</div>';
+}
+
+async function addToSheet(f) {
+  const btn=$('add-btn'); btn.disabled=true; btn.textContent='Saving…';
+  try {
+    const params=new URLSearchParams({action:'addRow',...f});
+    const data=await jsonp(scriptURL+'?'+params.toString());
+    if(data.error) throw new Error(data.error);
+    frags.push(f); setSyncStatus('ok',frags.length+' frags');
+    render(); buildWeekSchedule(); checkEnrichBanner();
+    toast('Added to your collection'); clearForm();
+  } catch(e){ toast('Could not save — check your connection'); }
+  finally{ btn.disabled=false; btn.textContent='Add to collection'; }
+}
+
+async function updateFragInSheet(f) {
+  // Encode as single 'data' param to avoid URL length limits with long note strings
+  const params=new URLSearchParams({action:'updateRow', data: JSON.stringify(f)});
+  const data=await jsonp(scriptURL+'?'+params.toString());
+  if(data.error) throw new Error(data.error);
+  return data;
+}
+
+function clearForm() {
+  ['in-brand','in-name','in-use'].forEach(id=>$(id).value='');
+  $('in-season').selectedIndex=0;
+  $('ai-preview').classList.remove('visible'); aiData={};
+}
+
+// ── Enrich banner ────────────────────────────────────────────
+function checkEnrichBanner() {
+  const missing=frags.filter(needsEnrichment);
+  if(missing.length>0){
+    $('enrich-sub').textContent=`${missing.length} of ${frags.length} frags are missing detailed notes. AI can look up everything automatically.`;
+    $('enrich-banner').classList.remove('hidden');
+  } else {
+    $('enrich-banner').classList.add('hidden');
+  }
+}
+
+// ── Batch enrichment ─────────────────────────────────────────
+function closeProgressModal() {
+  $('progress-modal').classList.remove('open');
+  loadFromSheet();
+}
+
+function logLine(msg, cls='') {
+  const log=$('prog-log');
+  const line=document.createElement('div');
+  if(cls) line.className=cls;
+  line.textContent=msg;
+  log.appendChild(line);
+  log.scrollTop=log.scrollHeight;
+}
+
+async function enrichCollection() {
+  const toEnrich = frags.filter(needsEnrichment);
+  if(!toEnrich.length){
+    // Force re-enrich all if everything looks enriched in memory
+    // (sheet may still be empty)
+    const all = [...frags];
+    if(!all.length){ toast('No frags loaded yet'); return; }
+    $('enrich-btn').disabled=true; if($('enrich-btn-settings')) $('enrich-btn-settings').disabled=true;
+    $('prog-log').innerHTML=''; $('prog-bar').style.width='0%';
+    $('prog-done-btn').classList.remove('visible');
+    $('progress-modal').classList.add('open');
+    logLine('All frags appear enriched in memory — re-writing all to Sheet to be sure…', 'inf');
+    let done2=0, ok2=0, fail2=0;
+    for(const frag of all){
+      try{
+        if(frag._row && frag.topNotes){
+          $('prog-status').textContent=`Re-saving ${frag.brand} ${frag.name}…`;
+          const r=await updateFragInSheet({_row:String(frag._row),category:frag.category||'',style:frag.style||'',seasons:frag.seasons||'All Year',use:frag.use||'',concentration:frag.concentration||'',topNotes:frag.topNotes||'',midNotes:frag.midNotes||'',baseNotes:frag.baseNotes||'',longevity:frag.longevity||'',similar:frag.similar||'',inspiredBy:frag.inspiredBy||''});
+          if(r&&r.error) throw new Error(r.error);
+          ok2++; logLine(`✓ ${frag.brand} ${frag.name}`, 'ok');
+        } else if(!frag._row){
+          logLine(`⚠ ${frag.brand} ${frag.name} — no row number`, 'err'); fail2++;
+        } else {
+          logLine(`⚠ ${frag.brand} ${frag.name} — no notes to write`, 'inf');
+        }
+      } catch(e){ fail2++; logLine(`✗ ${frag.brand} ${frag.name} — ${e.message}`, 'err'); }
+      done2++;
+      $('prog-bar').style.width=Math.round((done2/all.length)*100)+'%';
+      await new Promise(r=>setTimeout(r,300));
+    }
+    $('prog-status').textContent=`Done — ${ok2} written, ${fail2} failed`;
+    $('prog-done-btn').classList.add('visible');
+    $('enrich-btn').disabled=false; if($('enrich-btn-settings')) $('enrich-btn-settings').disabled=false;
+    return;
+  }
+
+  $('enrich-btn').disabled=true; if($('enrich-btn-settings')) $('enrich-btn-settings').disabled=true;
+  $('prog-log').innerHTML='';
+  $('prog-bar').style.width='0%';
+  $('prog-done-btn').classList.remove('visible');
+  $('progress-modal').classList.add('open');
+
+  let done=0, succeeded=0, failed=0;
+  const total=toEnrich.length;
+
+  for(const frag of toEnrich){
+    $('prog-status').textContent=`Looking up ${frag.brand} ${frag.name}…`;
+    try {
+      // Step 1: AI lookup
+      const enriched=await aiLookup(frag.brand, frag.name);
+      logLine(`  AI data received for ${frag.name}`, 'inf');
+
+      // Step 2: Write to sheet — do this BEFORE merging into memory
+      if(frag._row){
+        $('prog-status').textContent=`Saving ${frag.brand} ${frag.name} to Sheet…`;
+        const payload = {
+          _row: String(frag._row),
+          category: enriched.category||frag.category||'',
+          style: enriched.style||frag.style||'',
+          seasons: enriched.seasons||frag.seasons||'All Year',
+          use: enriched.use||frag.use||'',
+          concentration: enriched.concentration||'',
+          topNotes: enriched.topNotes||'',
+          midNotes: enriched.midNotes||'',
+          baseNotes: enriched.baseNotes||'',
+          longevity: enriched.longevity||'',
+          similar: enriched.similar||'',
+          inspiredBy: enriched.inspiredBy||'',
+        };
+        const result = await updateFragInSheet(payload);
+        if(result && result.error) throw new Error('Sheet error: ' + result.error);
+        logLine(`  Sheet row ${frag._row} updated`, 'inf');
+      } else {
+        logLine(`  ⚠ No row number for ${frag.name} — skipping sheet write`, 'err');
+      }
+
+      // Step 3: Only merge into memory after successful sheet write
+      Object.assign(frag, enriched);
+      succeeded++;
+      logLine(`✓ ${frag.brand} ${frag.name}`, 'ok');
+    } catch(e) {
+      failed++;
+      logLine(`✗ ${frag.brand} ${frag.name} — ${e.message}`, 'err');
+    }
+    done++;
+    $('prog-bar').style.width=Math.round((done/total)*100)+'%';
+    await new Promise(r=>setTimeout(r,1000));
+  }
+
+  $('prog-status').textContent=`Complete — ${succeeded} enriched, ${failed} failed`;
+  logLine(`Done. ${succeeded} updated, ${failed} skipped.`, 'inf');
+  $('prog-done-btn').classList.add('visible');
+  $('enrich-btn').disabled=false; if($('enrich-btn-settings')) $('enrich-btn-settings').disabled=false;
+  render(); buildWeekSchedule(); checkEnrichBanner();
+}
+
+$('enrich-btn').addEventListener('click', ()=>{ enrichCollection(); });
+$('enrich-btn-settings').addEventListener('click', ()=>{ $('settings-modal').classList.remove('open'); enrichCollection(); });
+
+// ── AI lookup (single frag) ──────────────────────────────────
+async function aiLookup(brand, name) {
+  const prompt=`You are a fragrance expert. Research "${name}" by ${brand}. Return ONLY a valid JSON object, no markdown, no explanation:
+{"category":"short category e.g. Fresh Blue","style":"2-4 word style","seasons":"e.g. Spring/Summer","use":"e.g. Office, Daily","topNotes":"comma list","midNotes":"comma list","baseNotes":"comma list","longevity":"one sentence","similar":"3-5 frags as Brand Name, comma separated","inspiredBy":"designer original if clone else empty string","concentration":"EDP/EDT/etc"}`;
+  const res=await fetch(API_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,tools:[{type:'web_search_20250305',name:'web_search'}],messages:[{role:'user',content:prompt}]})
+  });
+  const data=await res.json();
+  let text='';
+  if(data.content) data.content.forEach(b=>{if(b.type==='text')text+=b.text;});
+  const match=text.match(/\{[\s\S]*?\}/);
+  if(!match) throw new Error('No JSON returned');
+  return JSON.parse(match[0]);
+}
+
+// ── Week randomizer ──────────────────────────────────────────
+function buildWeekSchedule() {
+  const season=getCurrentSeason();
+  const seasonal=frags.filter(f=>seasonMatch(f,season));
+  const dayPool=seasonal.filter(f=>isWork(f)||(f.use||'').toLowerCase().match(/casual|daily/));
+  const nightPool=seasonal.filter(f=>(f.use||'').toLowerCase().match(/date|evening|night|dress/));
+  const dp=dayPool.length>=3?dayPool:seasonal.length?seasonal:frags;
+  const np=nightPool.length>=3?nightPool:seasonal.length?seasonal:frags;
+  const today=new Date();
+  const sLabel=season.charAt(0).toUpperCase()+season.slice(1);
+  const sEmoji={spring:'🌸',summer:'☀️',fall:'🍂',winter:'❄️'}[season];
+  $('rand-meta').textContent=`${sEmoji} ${sLabel} · ${DAYS[today.getDay()]}, ${MONTHS[today.getMonth()]} ${today.getDate()}`;
+  weekSchedule=[];
+  for(let i=0;i<5;i++){
+    const d=new Date(today); d.setDate(today.getDate()+i);
+    weekSchedule.push({date:d,day:dp[Math.floor(Math.random()*dp.length)],night:np[Math.floor(Math.random()*np.length)]});
+  }
+  renderWeek();
+}
+
+function renderWeek() {
+  const today=new Date();
+  if(!weekSchedule.length){$('week-grid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--text-3);font-size:13px;">Connect your sheet to generate a weekly rotation.</div>';return;}
+  $('week-grid').innerHTML=weekSchedule.map(w=>{
+    const isToday=w.date.toDateString()===today.toDateString();
+    return `<div class="day-col${isToday?' today':''}">
+      <div class="day-header"><span class="day-name">${DAYS[w.date.getDay()].slice(0,3)}</span><span class="day-date">${MONTHS[w.date.getMonth()]} ${w.date.getDate()}</span>${isToday?'<span class="today-pip"></span>':''}</div>
+      <div class="day-slot" onclick="openPanel(${frags.indexOf(w.day)})">
+        <div class="slot-time"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Day</div>
+        ${w.day?`<div class="slot-brand">${w.day.brand}</div><div class="slot-name">${w.day.name}</div><div class="slot-style">${w.day.style||''}</div>`:'<div class="slot-empty">—</div>'}
+      </div>
+      <div class="day-slot" onclick="openPanel(${frags.indexOf(w.night)})">
+        <div class="slot-time"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>Night</div>
+        ${w.night?`<div class="slot-brand">${w.night.brand}</div><div class="slot-name">${w.night.name}</div><div class="slot-style">${w.night.style||''}</div>`:'<div class="slot-empty">—</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+$('roll-btn').addEventListener('click',buildWeekSchedule);
+
+// ── Render ───────────────────────────────────────────────────
+function render() {
+  const visible=frags.filter(f=>seasonMatch(f,activeSeason)&&styleMatch(f,activeStyle)&&(!workOnly||isWork(f)));
+  $('showing-label').textContent=visible.length===frags.length?`${frags.length} fragrances`:`${visible.length} of ${frags.length} fragrances`;
+  const counts={spring:0,summer:0,fall:0,winter:0};
+  frags.forEach(f=>{const sl=seasonList(f);if(sl[0]==='all'){counts.spring++;counts.summer++;counts.fall++;counts.winter++;}else sl.forEach(s=>{if(counts[s]!==undefined)counts[s]++;});});
+  $('stats-strip').innerHTML=`
+    <div class="stat-tile"><div class="st-label">Total</div><div class="st-val">${frags.length}</div></div>
+    <div class="stat-tile spring"><div class="st-label">🌸 Spring</div><div class="st-val">${counts.spring}</div></div>
+    <div class="stat-tile summer"><div class="st-label">☀️ Summer</div><div class="st-val">${counts.summer}</div></div>
+    <div class="stat-tile fall"><div class="st-label">🍂 Fall</div><div class="st-val">${counts.fall}</div></div>
+    <div class="stat-tile winter"><div class="st-label">❄️ Winter</div><div class="st-val">${counts.winter}</div></div>
+    <div class="stat-tile work"><div class="st-label">💼 Work-safe</div><div class="st-val">${frags.filter(isWork).length}</div></div>`;
+  const grid=$('frag-grid');
+  if(!visible.length){grid.innerHTML='<div class="no-results">No fragrances match these filters.</div>';return;}
+  grid.innerHTML=visible.map(f=>`<div class="frag-card${isWork(f)?' work-ok':''}${isEnriched(f)?' enriched':''}" onclick="openPanel(${frags.indexOf(f)})">
+    <div class="card-brand">${f.brand||''}</div>
+    <div class="card-name">${f.name||''}</div>
+    <div class="card-style">${f.style||''}</div>
+    <div class="card-badges">${badgeHTML(f)}${isWork(f)?'<span class="badge b-work">Work</span>':''}${isEnriched(f)?'<span class="badge" style="background:var(--accent-bg);color:var(--accent);font-size:10px;">✦ enriched</span>':''}</div>
+    <div class="card-use">${f.use||''}</div>
+  </div>`).join('');
+}
+
+// ── Detail panel ─────────────────────────────────────────────
+function openPanel(idx) {
+  if(idx<0||idx>=frags.length) return;
+  const f=frags[idx];
+  $('dp-brand').textContent=f.brand||''; $('dp-name').textContent=f.name||'';
+  $('dp-style').textContent=f.style||''; $('dp-seasons').innerHTML=badgeHTML(f); $('dp-use').textContent=f.use||'';
+  if(f.concentration){$('dp-conc-sec').style.display='block';$('dp-conc').textContent=f.concentration;}else $('dp-conc-sec').style.display='none';
+  if(f.topNotes||f.midNotes||f.baseNotes){
+    $('dp-notes').innerHTML=`<div class="note-col"><div class="note-col-label">Top</div><div class="note-col-val">${f.topNotes||'—'}</div></div><div class="note-col"><div class="note-col-label">Heart</div><div class="note-col-val">${f.midNotes||'—'}</div></div><div class="note-col"><div class="note-col-label">Base</div><div class="note-col-val">${f.baseNotes||'—'}</div></div>`;
+    $('dp-ai-tag').style.display='inline-flex';
+  } else {
+    $('dp-notes').innerHTML=`<div class="note-col" style="grid-column:1/-1"><div class="note-col-val">${f.notes||'No notes on record.'}</div></div>`;
+    $('dp-ai-tag').style.display='none';
+  }
+  if(f.similar){$('dp-similar-sec').style.display='block';$('dp-similar').innerHTML=f.similar.split(',').map(s=>`<span class="similar-chip">${s.trim()}</span>`).join('');}else $('dp-similar-sec').style.display='none';
+  if(f.inspiredBy){$('dp-inspired-sec').style.display='block';$('dp-inspired').textContent=f.inspiredBy;}else $('dp-inspired-sec').style.display='none';
+  if(f.longevity){$('dp-longevity-sec').style.display='block';$('dp-longevity').textContent=f.longevity;}else $('dp-longevity-sec').style.display='none';
+  $('dp-work').style.display=isWork(f)?'flex':'none';
+  $('overlay').classList.add('open'); $('detail-panel').classList.add('open');
+}
+function closePanel(){$('overlay').classList.remove('open');$('detail-panel').classList.remove('open');}
+$('overlay').addEventListener('click',closePanel); $('dp-close').addEventListener('click',closePanel);
+
+document.querySelectorAll('#season-seg .seg-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#season-seg .seg-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); activeSeason=btn.dataset.season; render();
+}));
+document.querySelectorAll('#style-seg .seg-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('#style-seg .seg-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); activeStyle=btn.dataset.style; render();
+}));
+$('work-toggle-wrap').addEventListener('click',()=>{ workOnly=!workOnly; $('work-track').classList.toggle('on',workOnly); render(); });
+
+// ── Add form AI lookup ───────────────────────────────────────
+async function lookupFragrance() {
+  const brand=$('in-brand').value.trim(), name=$('in-name').value.trim();
+  if(!brand||!name){toast('Enter brand and name first');return;}
+  const btn=$('lookup-btn'); btn.disabled=true;
+  $('ai-preview').classList.add('visible');
+  $('ai-spinner').style.display='block';
+  $('ai-preview-title').textContent='Looking up…';
+  $('ai-preview-grid').innerHTML='';
+  try {
+    aiData=await aiLookup(brand,name);
+    $('ai-spinner').style.display='none'; $('ai-preview-title').textContent='Review AI results';
+    const fields=[{k:'category',l:'Category'},{k:'style',l:'Style'},{k:'seasons',l:'Seasons'},{k:'concentration',l:'Concentration'},{k:'use',l:'Best use'},{k:'topNotes',l:'Top notes'},{k:'midNotes',l:'Heart notes'},{k:'baseNotes',l:'Base notes'},{k:'longevity',l:'Longevity'},{k:'similar',l:'Similar frags'},{k:'inspiredBy',l:'Inspired by'}];
+    $('ai-preview-grid').innerHTML=fields.map(f=>`<div class="ai-preview-cell"><div class="ai-cell-label">${f.l}</div><div class="ai-cell-val${!aiData[f.k]?' empty':''}">${aiData[f.k]||'—'}</div></div>`).join('');
+    if(!$('in-season').value&&aiData.seasons){const m=Array.from($('in-season').options).find(o=>o.value===aiData.seasons);if(m)$('in-season').value=m.value;}
+    if(!$('in-use').value&&aiData.use)$('in-use').value=aiData.use;
+    toast('AI lookup complete');
+  } catch(e){
+    $('ai-spinner').style.display='none'; $('ai-preview-title').textContent='Lookup failed';
+    $('ai-preview-grid').innerHTML='<div class="ai-preview-cell" style="grid-column:1/-1"><div class="ai-cell-val empty">Could not retrieve data. You can still add manually.</div></div>';
+    aiData={};
+  } finally { btn.disabled=false; }
+}
+$('lookup-btn').addEventListener('click',lookupFragrance);
+
+$('add-btn').addEventListener('click',()=>{
+  if(!scriptURL){toast('Open Settings ⚙ to connect your Google Sheet');$('settings-modal').classList.add('open');return;}
+  const brand=$('in-brand').value.trim(), name=$('in-name').value.trim();
+  if(!brand||!name){toast('Brand and name are required');return;}
+  addToSheet({brand,name,category:aiData.category||'Uncategorized',style:aiData.style||'',seasons:$('in-season').value||aiData.seasons||'All Year',use:$('in-use').value.trim()||aiData.use||'Daily',concentration:aiData.concentration||'',topNotes:aiData.topNotes||'',midNotes:aiData.midNotes||'',baseNotes:aiData.baseNotes||'',longevity:aiData.longevity||'',similar:aiData.similar||'',inspiredBy:aiData.inspiredBy||'',notes:aiData.topNotes?`Top: ${aiData.topNotes} | Mid: ${aiData.midNotes} | Base: ${aiData.baseNotes}`:'',});
+});
+
+// ── Init ─────────────────────────────────────────────────────
+initTheme();
+if(scriptURL){ loadFromSheet(); }
+else{ setSyncStatus('err','not connected'); renderEmpty(); setTimeout(()=>$('settings-modal').classList.add('open'),600); }
+</script>
+</body>
+</html>
